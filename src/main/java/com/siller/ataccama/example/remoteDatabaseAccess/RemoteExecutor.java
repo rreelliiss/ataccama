@@ -1,6 +1,7 @@
 package com.siller.ataccama.example.remoteDatabaseAccess;
 
 import com.siller.ataccama.example.connectionManagement.Connection;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.sql.DriverManager;
@@ -10,6 +11,11 @@ import java.util.*;
 
 @Component
 public class RemoteExecutor {
+    int previewLimit;
+
+    RemoteExecutor(@Value("${com.siller.example.attacama.preview.limit}") int previewLimit){
+        this.previewLimit = previewLimit;
+    }
 
     private java.sql.Connection connect(Connection connection) throws SQLException {
         String url = String.format(
@@ -58,7 +64,7 @@ public class RemoteExecutor {
         try (java.sql.Connection remoteConnection = connect(connection)) {
             // following can lead to sql injection but I can't create prepared statement with variable table name
             ResultSet queryResult = remoteConnection.createStatement()
-                    .executeQuery(String.format("select * from %s limit 10", tableName));
+                    .executeQuery(String.format("select * from %s limit %d", tableName, previewLimit));
             return getMappedRows(queryResult);
         } catch (SQLException e) {
             if(e.getErrorCode() == 1146){
